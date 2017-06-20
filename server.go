@@ -183,12 +183,13 @@ type Response struct {
 
 // Server represents an RPC Server.
 type Server struct {
-	mu         sync.RWMutex // protects the serviceMap
-	serviceMap map[string]*service
-	reqLock    sync.Mutex // protects freeReq
-	freeReq    *Request
-	respLock   sync.Mutex // protects freeResp
-	freeResp   *Response
+	mu              sync.RWMutex // protects the serviceMap
+	serviceMap      map[string]*service
+	reqLock         sync.Mutex // protects freeReq
+	freeReq         *Request
+	respLock        sync.Mutex // protects freeResp
+	freeResp        *Response
+	ServerCodecFunc func(io.ReadWriteCloser) ServerCodec
 }
 
 // NewServer returns a new Server.
@@ -444,12 +445,17 @@ func (c *gobServerCodec) Close() error {
 // ServeConn uses the gob wire format (see package gob) on the
 // connection. To use an alternate codec, use ServeCodec.
 func (server *Server) ServeConn(conn io.ReadWriteCloser) {
-	buf := bufio.NewWriter(conn)
-	srv := &gobServerCodec{
-		rwc:    conn,
-		dec:    gob.NewDecoder(conn),
-		enc:    gob.NewEncoder(buf),
-		encBuf: buf,
+	var srv ServerCodec
+	if server.ServerCodecFunc != nil {
+		srv = server.ServerCodecFunc(conn)
+	} else {
+		buf := bufio.NewWriter(conn)
+		srv = &gobServerCodec{
+			rwc:    conn,
+			dec:    gob.NewDecoder(conn),
+			enc:    gob.NewEncoder(buf),
+			encBuf: buf,
+		}
 	}
 	server.ServeCodec(srv)
 }
