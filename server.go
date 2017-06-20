@@ -183,13 +183,14 @@ type Response struct {
 
 // Server represents an RPC Server.
 type Server struct {
-	mu              sync.RWMutex // protects the serviceMap
-	serviceMap      map[string]*service
-	reqLock         sync.Mutex // protects freeReq
-	freeReq         *Request
-	respLock        sync.Mutex // protects freeResp
-	freeResp        *Response
-	ServerCodecFunc func(io.ReadWriteCloser) ServerCodec
+	mu                sync.RWMutex // protects the serviceMap
+	serviceMap        map[string]*service
+	reqLock           sync.Mutex // protects freeReq
+	freeReq           *Request
+	respLock          sync.Mutex // protects freeResp
+	freeResp          *Response
+	ServerCodecFunc   func(io.ReadWriteCloser) ServerCodec
+	PreServeCodecFunc func(ServerCodec) error
 }
 
 // NewServer returns a new Server.
@@ -350,6 +351,9 @@ func suitableMethods(typ reflect.Type, reportErr bool) map[string]*methodType {
 // contains an error when it is used.
 var invalidRequest = struct{}{}
 
+func (server *Server) SendResponse(sending *sync.Mutex, req *Request, reply interface{}, codec ServerCodec, errmsg string) {
+	server.sendResponse(sending, req, reply, codec, errmsg)
+}
 func (server *Server) sendResponse(sending *sync.Mutex, req *Request, reply interface{}, codec ServerCodec, errmsg string) {
 	resp := server.getResponse()
 	// Encode the response header
@@ -375,6 +379,9 @@ func (m *methodType) NumCalls() (n uint) {
 	return n
 }
 
+func (s *service) Call(server *Server, sending *sync.Mutex, mtype *methodType, req *Request, argv, replyv reflect.Value, codec ServerCodec) {
+	s.call(server, sending, mtype, req, argv, replyv, codec)
+}
 func (s *service) call(server *Server, sending *sync.Mutex, mtype *methodType, req *Request, argv, replyv reflect.Value, codec ServerCodec) {
 	mtype.Lock()
 	mtype.numCalls++
@@ -463,6 +470,11 @@ func (server *Server) ServeConn(conn io.ReadWriteCloser) {
 // ServeCodec is like ServeConn but uses the specified codec to
 // decode requests and encode responses.
 func (server *Server) ServeCodec(codec ServerCodec) {
+	if server.PreServeCodecFunc != nil {
+		if err := server.PreServeCodecFunc(codec); err != nil {
+			return
+		}
+	}
 	sending := new(sync.Mutex)
 	for {
 		service, mtype, req, argv, replyv, keepReading, err := server.readRequest(codec)
@@ -518,6 +530,10 @@ func (server *Server) getRequest() *Request {
 	return req
 }
 
+func (server *Server) FreeRequest(req *Request) {
+	server.freeRequest(req)
+}
+
 func (server *Server) freeRequest(req *Request) {
 	server.reqLock.Lock()
 	req.next = server.freeReq
@@ -545,6 +561,9 @@ func (server *Server) freeResponse(resp *Response) {
 	server.respLock.Unlock()
 }
 
+func (server *Server) ReadRequest(codec ServerCodec) (service *service, mtype *methodType, req *Request, argv, replyv reflect.Value, keepReading bool, err error) {
+	return server.readRequest(codec)
+}
 func (server *Server) readRequest(codec ServerCodec) (service *service, mtype *methodType, req *Request, argv, replyv reflect.Value, keepReading bool, err error) {
 	service, mtype, req, keepReading, err = server.readRequestHeader(codec)
 	if err != nil {
