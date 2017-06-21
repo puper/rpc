@@ -34,7 +34,7 @@ func (t *Front) Mul(args *proto.ProtoArgs, reply *proto.ProtoReply) error {
 	return nil
 }
 
-var invalidRequest = struct{}{}
+var invalidRequest = &empty.Empty{}
 
 type Server struct {
 	addr     string
@@ -122,9 +122,10 @@ func (this *Server) Auth(codec rpc.ServerCodec) error {
 	service.Call(this.server, sending, mtype, req, argv, replyv, codec)
 	reply := replyv.Interface().(*proto.AuthReply)
 	if !reply.Success {
-		codec.WriteResponse(&rpc.Response{
+		err = codec.WriteResponse(&rpc.Response{
 			ServiceMethod: "Callback.Test",
-		}, &empty.Empty{})
+		}, invalidRequest)
+		log.Println(err)
 		return errors.New("auth failed")
 	}
 	return nil

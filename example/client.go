@@ -8,6 +8,7 @@ import (
 
 	"github.com/puper/rpc"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/puper/codec"
 )
 
@@ -24,6 +25,8 @@ func NewClient(addr string) (*Client, error) {
 	codec_ := codec.NewClientCodec(conn)
 	client := rpc.NewClientWithCodec(codec_)
 	client.CallbackFunc = func(client *rpc.Client, codec_ rpc.ClientCodec, response rpc.Response) error {
+		reply := &empty.Empty{}
+		codec_.ReadResponseBody(reply)
 		log.Println(response)
 		return nil
 	}
