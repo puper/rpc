@@ -36,6 +36,9 @@ func NewClient(addr string) (*Client, error) {
 		addr:   addr,
 	}, nil
 }
+func (this *Client) Rigester() {
+
+}
 
 func (this *Client) Call(serviceMethod string, args interface{}, reply interface{}) error {
 	return this.client.Call(serviceMethod, args, reply)
@@ -50,7 +53,9 @@ func main() {
 	reply := new(proto.AuthReply)
 	req.User = "puper"
 	err = c.Call("Front.Auth", req, reply)
-	log.Println(err)
+	if err != nil {
+		log.Println(err)
+	}
 	log.Println(reply.Success)
 
 	req1 := new(proto.ProtoArgs)
@@ -58,7 +63,9 @@ func main() {
 	req1.B = 7
 	reply1 := new(proto.ProtoReply)
 	err = c.Call("Front.Mul", req1, reply1)
-	log.Println(err)
-	log.Println(reply1.C)
+	if err != nil {
+		log.Println(err)
+	}
+	//log.Println(reply1.C)
 
 }
