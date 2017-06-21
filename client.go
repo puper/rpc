@@ -113,7 +113,6 @@ func (client *Client) input() {
 		if err != nil {
 			break
 		}
-		log.Println(response.ServiceMethod)
 		if client.CallbackFunc != nil && strings.HasPrefix(response.ServiceMethod, client.CallbackPrefix) {
 			log.Println(response.ServiceMethod)
 			err = client.CallbackFunc(client, client.codec, response)

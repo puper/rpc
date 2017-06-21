@@ -8,8 +8,6 @@ import (
 
 	"github.com/puper/rpc"
 
-	"time"
-
 	"github.com/puper/codec"
 )
 
@@ -25,8 +23,8 @@ func NewClient(addr string) (*Client, error) {
 	}
 	codec_ := codec.NewClientCodec(conn)
 	client := rpc.NewClientWithCodec(codec_)
-	client.CallbackFunc = func(*rpc.Client, rpc.ClientCodec, rpc.Response) error {
-		log.Println(11111111)
+	client.CallbackFunc = func(client *rpc.Client, codec_ rpc.ClientCodec, response rpc.Response) error {
+		log.Println(response)
 		return nil
 	}
 	client.CallbackPrefix = "Callback"
@@ -47,7 +45,7 @@ func main() {
 	}
 	req := new(proto.AuthArgs)
 	reply := new(proto.AuthReply)
-	req.User = "puper1"
+	req.User = "puper"
 	err = c.Call("Front.Auth", req, reply)
 	log.Println(err)
 	log.Println(reply.Success)
@@ -56,9 +54,8 @@ func main() {
 	req1.A = 5
 	req1.B = 7
 	reply1 := new(proto.ProtoReply)
-	//err = c.Call("Front.Mul", req1, reply1)
+	err = c.Call("Front.Mul", req1, reply1)
 	log.Println(err)
 	log.Println(reply1.C)
-	time.Sleep(5 * time.Second)
 
 }

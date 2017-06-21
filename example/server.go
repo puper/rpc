@@ -13,8 +13,7 @@ import (
 
 	"sync"
 
-	"time"
-
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/puper/codec"
 )
 
@@ -125,8 +124,7 @@ func (this *Server) Auth(codec rpc.ServerCodec) error {
 	if !reply.Success {
 		codec.WriteResponse(&rpc.Response{
 			ServiceMethod: "Callback.Test",
-		}, invalidRequest)
-		time.Sleep(time.Second * 5)
+		}, &empty.Empty{})
 		return errors.New("auth failed")
 	}
 	return nil
