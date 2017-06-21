@@ -4,7 +4,8 @@ import (
 	"errors"
 	"log"
 	"net"
-	"test/proto"
+
+	"github.com/puper/rpc/example/proto"
 
 	"github.com/puper/rpc"
 
@@ -12,21 +13,24 @@ import (
 
 	"sync"
 
+	"time"
+
 	"github.com/puper/codec"
 )
 
-type Args struct {
-	A int
-	B int
+type Front struct {
 }
 
-type Reply struct {
-	C int
+func (t *Front) Auth(args *proto.AuthArgs, reply *proto.AuthReply) error {
+	if args.User == "puper" {
+		reply.Success = true
+	} else {
+		reply.Success = false
+	}
+	return nil
 }
 
-type Arith int
-
-func (t *Arith) Mul(args *proto.ProtoArgs, reply *proto.ProtoReply) error {
+func (t *Front) Mul(args *proto.ProtoArgs, reply *proto.ProtoReply) error {
 	reply.C = args.A * args.B
 	return nil
 }
@@ -74,7 +78,9 @@ func (this *Server) ServeCodec(codec rpc.ServerCodec) {
 		err error
 	)
 	if err = this.Auth(codec); err != nil {
+		codec.Close()
 		log.Println(err)
+		return
 	}
 	sending := new(sync.Mutex)
 	for {
@@ -109,10 +115,19 @@ func (this *Server) Auth(codec rpc.ServerCodec) error {
 		}
 		return err
 	}
-	if req.ServiceMethod == "Arith.Mul" {
-		this.server.SendResponse(sending, req, invalidRequest, codec, err.Error())
+	if req.ServiceMethod != "Front.Auth" {
+		this.server.SendResponse(sending, req, invalidRequest, codec, "")
 		this.server.FreeRequest(req)
 		return errors.New("not auth service")
+	}
+	service.Call(this.server, sending, mtype, req, argv, replyv, codec)
+	reply := replyv.Interface().(*proto.AuthReply)
+	if !reply.Success {
+		codec.WriteResponse(&rpc.Response{
+			ServiceMethod: "Callback.Test",
+		}, invalidRequest)
+		time.Sleep(time.Second * 5)
+		return errors.New("auth failed")
 	}
 	return nil
 }
@@ -123,7 +138,7 @@ func (this *Server) RegisterName(name string, rcvr interface{}) error {
 
 func main() {
 	server := NewServer(":8081")
-	server.RegisterName("Arith", new(Arith))
+	server.RegisterName("Front", new(Front))
 	server.Start()
 	log.Println(1111)
 }

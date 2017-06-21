@@ -13,3 +13,12 @@ message ProtoArgs {
 message ProtoReply { 
     int32 C = 1;
 }
+
+message AuthArgs {
+	string User = 1;
+	string Platform = 2;
+}
+
+message AuthReply {
+	bool Success = 1;
+}

@@ -10,6 +10,8 @@
 	It has these top-level messages:
 		ProtoArgs
 		ProtoReply
+		AuthArgs
+		AuthReply
 */
 package proto
 
@@ -70,9 +72,51 @@ func (m *ProtoReply) GetC() int32 {
 	return 0
 }
 
+type AuthArgs struct {
+	User     string `protobuf:"bytes,1,opt,name=User,proto3" json:"User,omitempty"`
+	Platform string `protobuf:"bytes,2,opt,name=Platform,proto3" json:"Platform,omitempty"`
+}
+
+func (m *AuthArgs) Reset()                    { *m = AuthArgs{} }
+func (m *AuthArgs) String() string            { return proto1.CompactTextString(m) }
+func (*AuthArgs) ProtoMessage()               {}
+func (*AuthArgs) Descriptor() ([]byte, []int) { return fileDescriptorProto, []int{2} }
+
+func (m *AuthArgs) GetUser() string {
+	if m != nil {
+		return m.User
+	}
+	return ""
+}
+
+func (m *AuthArgs) GetPlatform() string {
+	if m != nil {
+		return m.Platform
+	}
+	return ""
+}
+
+type AuthReply struct {
+	Success bool `protobuf:"varint,1,opt,name=Success,proto3" json:"Success,omitempty"`
+}
+
+func (m *AuthReply) Reset()                    { *m = AuthReply{} }
+func (m *AuthReply) String() string            { return proto1.CompactTextString(m) }
+func (*AuthReply) ProtoMessage()               {}
+func (*AuthReply) Descriptor() ([]byte, []int) { return fileDescriptorProto, []int{3} }
+
+func (m *AuthReply) GetSuccess() bool {
+	if m != nil {
+		return m.Success
+	}
+	return false
+}
+
 func init() {
 	proto1.RegisterType((*ProtoArgs)(nil), "proto.ProtoArgs")
 	proto1.RegisterType((*ProtoReply)(nil), "proto.ProtoReply")
+	proto1.RegisterType((*AuthArgs)(nil), "proto.AuthArgs")
+	proto1.RegisterType((*AuthReply)(nil), "proto.AuthReply")
 }
 func (m *ProtoArgs) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
@@ -125,6 +169,64 @@ func (m *ProtoReply) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *AuthArgs) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AuthArgs) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.User) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintProto(dAtA, i, uint64(len(m.User)))
+		i += copy(dAtA[i:], m.User)
+	}
+	if len(m.Platform) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintProto(dAtA, i, uint64(len(m.Platform)))
+		i += copy(dAtA[i:], m.Platform)
+	}
+	return i, nil
+}
+
+func (m *AuthReply) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AuthReply) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Success {
+		dAtA[i] = 0x8
+		i++
+		if m.Success {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	return i, nil
+}
+
 func encodeFixed64Proto(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	dAtA[offset+1] = uint8(v >> 8)
@@ -169,6 +271,29 @@ func (m *ProtoReply) Size() (n int) {
 	_ = l
 	if m.C != 0 {
 		n += 1 + sovProto(uint64(m.C))
+	}
+	return n
+}
+
+func (m *AuthArgs) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.User)
+	if l > 0 {
+		n += 1 + l + sovProto(uint64(l))
+	}
+	l = len(m.Platform)
+	if l > 0 {
+		n += 1 + l + sovProto(uint64(l))
+	}
+	return n
+}
+
+func (m *AuthReply) Size() (n int) {
+	var l int
+	_ = l
+	if m.Success {
+		n += 2
 	}
 	return n
 }
@@ -343,6 +468,184 @@ func (m *ProtoReply) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *AuthArgs) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowProto
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AuthArgs: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AuthArgs: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field User", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProto
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProto
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.User = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Platform", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProto
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProto
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Platform = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipProto(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthProto
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AuthReply) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowProto
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AuthReply: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AuthReply: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Success", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProto
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Success = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipProto(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthProto
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func skipProto(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
@@ -451,12 +754,16 @@ var (
 func init() { proto1.RegisterFile("proto.proto", fileDescriptorProto) }
 
 var fileDescriptorProto = []byte{
-	// 111 bytes of a gzipped FileDescriptorProto
+	// 175 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x2e, 0x28, 0xca, 0x2f,
 	0xc9, 0xd7, 0x03, 0x93, 0x42, 0xac, 0x60, 0x4a, 0x49, 0x9d, 0x8b, 0x33, 0x00, 0xc4, 0x70, 0x2c,
 	0x4a, 0x2f, 0x16, 0xe2, 0xe1, 0x62, 0x74, 0x94, 0x60, 0x54, 0x60, 0xd4, 0x60, 0x0d, 0x62, 0x74,
 	0x04, 0xf1, 0x9c, 0x24, 0x98, 0x20, 0x3c, 0x27, 0x25, 0x29, 0x2e, 0x2e, 0xb0, 0xc2, 0xa0, 0xd4,
-	0x82, 0x9c, 0x4a, 0x90, 0x9c, 0x33, 0x4c, 0xa5, 0xb3, 0x93, 0xc0, 0x89, 0x47, 0x72, 0x8c, 0x17,
-	0x1e, 0xc9, 0x31, 0x3e, 0x78, 0x24, 0xc7, 0x38, 0xe1, 0xb1, 0x1c, 0x43, 0x12, 0x1b, 0xd8, 0x74,
-	0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0x8c, 0x12, 0x1e, 0xfc, 0x73, 0x00, 0x00, 0x00,
+	0x82, 0x9c, 0x4a, 0x90, 0x9c, 0x33, 0x4c, 0xa5, 0xb3, 0x92, 0x15, 0x17, 0x87, 0x63, 0x69, 0x49,
+	0x06, 0xd8, 0x0c, 0x21, 0x2e, 0x96, 0xd0, 0xe2, 0xd4, 0x22, 0xb0, 0x24, 0x67, 0x10, 0x98, 0x2d,
+	0x24, 0xc5, 0xc5, 0x11, 0x90, 0x93, 0x58, 0x92, 0x96, 0x5f, 0x94, 0x0b, 0x36, 0x90, 0x33, 0x08,
+	0xce, 0x57, 0x52, 0xe5, 0xe2, 0x04, 0xe9, 0x85, 0x18, 0x2b, 0xc1, 0xc5, 0x1e, 0x5c, 0x9a, 0x9c,
+	0x9c, 0x5a, 0x5c, 0x0c, 0xd6, 0xcf, 0x11, 0x04, 0xe3, 0x3a, 0x09, 0x9c, 0x78, 0x24, 0xc7, 0x78,
+	0xe1, 0x91, 0x1c, 0xe3, 0x83, 0x47, 0x72, 0x8c, 0x13, 0x1e, 0xcb, 0x31, 0x24, 0xb1, 0x81, 0x3d,
+	0x60, 0x0c, 0x08, 0x00, 0x00, 0xff, 0xff, 0xa2, 0x8f, 0xd4, 0x76, 0xd6, 0x00, 0x00, 0x00,
 }

@@ -12,6 +12,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 )
 
@@ -44,11 +45,13 @@ type Client struct {
 	reqMutex sync.Mutex // protects following
 	request  Request
 
-	mutex    sync.Mutex // protects following
-	seq      uint64
-	pending  map[uint64]*Call
-	closing  bool // user has called Close
-	shutdown bool // server has told us to stop
+	mutex          sync.Mutex // protects following
+	seq            uint64
+	pending        map[uint64]*Call
+	closing        bool // user has called Close
+	shutdown       bool // server has told us to stop
+	CallbackFunc   func(*Client, ClientCodec, Response) error
+	CallbackPrefix string
 }
 
 // A ClientCodec implements writing of RPC requests and
@@ -109,6 +112,12 @@ func (client *Client) input() {
 		err = client.codec.ReadResponseHeader(&response)
 		if err != nil {
 			break
+		}
+		log.Println(response.ServiceMethod)
+		if client.CallbackFunc != nil && strings.HasPrefix(response.ServiceMethod, client.CallbackPrefix) {
+			log.Println(response.ServiceMethod)
+			err = client.CallbackFunc(client, client.codec, response)
+			continue
 		}
 		seq := response.Seq
 		client.mutex.Lock()
